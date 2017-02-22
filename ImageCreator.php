@@ -40,22 +40,36 @@ class ImageCreator
         $this->url = $url;
     }
 
-    public function createImage(){
-        $im = imagecreatefromjpeg($this->programs[0]['image']);
-        Header("Content-type: image/jpeg");
-        imagejpeg($im);
-        imageDestroy($im);
-    }
-
-
     public function Im(){
+
         /* Создаем новый объект imagick */
         $im = new Imagick();
+        $draw = new ImagickDraw();
+        $pixel = new ImagickPixel( 'white' );
 
-        /* создаем красное, зеленое и синее изображения */
-        $im->newImage(100, 50, "red");
-        $im->newImage(100, 50, "green");
-        $im->newImage(100, 50, "blue");
+        foreach ($this->programs as $program) {
+
+            $handle = fopen($program['image'], 'rb');
+            $im->readImageFile($handle);
+            $im->resizeImage(12, 12);
+
+            /* Новое изображение */
+            $im->newImage(800, 175, $pixel);
+
+            /* Черный текст */
+            $draw->setFillColor('black');
+
+            /* Настройки шрифта */
+            $draw->setFont('Bookman-Demi');
+            $draw->setFontSize( 20 );
+
+            /* Создаем текст */
+            $im->annotateImage($draw, 10, 45, 0, date('h:m', $program['realtime_begin'])." - ".date('h:m', $program['realtime_end']).", ".$program['title'].", ".$program['sub_title']);
+
+            /* Устанавливаем формат изображения */
+            $im->setImageFormat('png');
+
+        }
 
         /* Соединяем все изображения в одно */
         $im->resetIterator();
